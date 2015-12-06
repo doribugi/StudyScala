@@ -8,11 +8,16 @@ import scala.io.Source
 /**
   * Created by greatstone on 2015. 11. 28..
   */
-object gRanks {
-  def solve(resource: URL): Unit = {
+object gRanks extends App {
+  val filename = "A-large-practice"
+  val writer = new java.io.PrintWriter(filename + ".out")
+  val result = solve(getClass.getResource(s"gRanks/$filename.in"))
+
+  def solve(resource: URL) = {
     val lines = Source.fromURL(resource).getLines
     val T = lines.next.toInt
 
+    var result = ""
     for (caseNum <- 1 to T) {
       var scores = Map[String, mutable.MutableList[Int]]()
 
@@ -48,7 +53,7 @@ object gRanks {
       }
 
       val rankTable = totalScores.sortWith((x, y) => (x._1 > y._1) || (x._1 == y._1 && x._2 < y._2))
-      println(s"Case #$caseNum:")
+      result += s"Case #$caseNum:\n"
       var rank = 1
       var nextRank = 1
       var previousScore = -1
@@ -56,10 +61,14 @@ object gRanks {
         if (previousScore != row._1) {
           rank = nextRank
         }
-        println(s"$rank: ${row._2}")
+        result += s"$rank: ${row._2}\n"
         previousScore = row._1
         nextRank += 1
       }
     }
+    result.lines
   }
+
+  writer.println(result)
+  writer.close()
 }
