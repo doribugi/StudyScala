@@ -19,54 +19,49 @@ object gRanks extends App {
 
     var result = ""
     for (caseNum <- 1 to T) {
-      var scores = Map[String, mutable.MutableList[Int]]()
+      val p = lines.next.toInt
+      val s = lines.next.split(" ").map(_.toInt)
+      val n = lines.next.toInt
+      val competitions = for (game <- 1 to n) yield lines.next.split(" ")
+      val m = lines.next.toInt
 
-      val P = lines.next.toInt
-      val Si = lines.next.split(" ").map(_.toInt)
-      val N = lines.next.toInt
-      for (game <- 1 to N) {
-        val result = lines.next.split(" ")
-        val Wi = result(0).toInt
-        var resIdx = 1
-        while (resIdx < result.size) {
-          if (scores.contains(result(resIdx))) {
-            val score = Wi * Si(resIdx - 1)
-            scores(result(resIdx)) += score
-          }
-          else {
-            val score = Wi * Si(resIdx - 1)
-            scores += (result(resIdx) -> mutable.MutableList(score))
-          }
-          resIdx += 1
-        }
-      }
-      val M = lines.next.toInt
-
-      var totalScores = mutable.MutableList[(Int, String)]()
-      for (score <- scores) {
-        var totalScore = 0
-        val sortedScore = score._2.sorted(Ordering[Int].reverse)
-        for (n <- 0 until M if n < score._2.length) {
-          totalScore += sortedScore(n)
-        }
-        totalScores += (totalScore -> score._1)
-      }
-
-      val rankTable = totalScores.sortWith((x, y) => (x._1 > y._1) || (x._1 == y._1 && x._2 < y._2))
       result += s"Case #$caseNum:\n"
-      var rank = 1
-      var nextRank = 1
-      var previousScore = -1
-      for (row <- rankTable) {
-        if (previousScore != row._1) {
-          rank = nextRank
-        }
-        result += s"$rank: ${row._2}\n"
-        previousScore = row._1
-        nextRank += 1
-      }
+      result += determineRank(s, competitions, m)
     }
     result.lines
+  }
+
+  def determineRank(s: Array[Int], competitions: Seq[Array[String]], m: Int) = {
+    var scores = Map[String, mutable.MutableList[Int]]()
+    competitions.foreach { x =>
+      val w = x.head.toInt
+      for ((winner, index) <- x.tail.zipWithIndex) {
+        if (scores.contains(winner)) {
+          val score = w * s(index)
+          scores(winner) += score
+        }
+        else {
+          val score = w * s(index)
+          scores += (winner -> mutable.MutableList(score))
+        }
+      }
+    }
+
+    val totalScores = for ((athlete, score) <- scores.toArray) yield
+      (athlete, score.sorted(Ordering[Int].reverse).take(m).sum)
+
+    val rankTable = totalScores.sortWith((x, y) => (x._2 > y._2) || (x._2 == y._2 && x._1 < y._1))
+    var rank = 1
+    var previousScore = -1
+    var res = ""
+    for ((score, index) <- rankTable.zipWithIndex) {
+      if (previousScore != score._2) {
+        rank = index + 1
+      }
+      previousScore = score._2
+      res += s"$rank: ${score._1}\n"
+    }
+    res
   }
 
   writer.println(result)
